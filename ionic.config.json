@@ -1,0 +1,7 @@
+{
+  "name": "frontend-finanzas",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
