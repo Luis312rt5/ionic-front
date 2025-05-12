@@ -1,0 +1,89 @@
+<ion-menu contentId="main-content" type="overlay">
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-title>Menú</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list>
+      <ion-item routerLink="/movimientos" routerDirection="root">Movimientos</ion-item>
+      <ion-item routerLink="/deudas" routerDirection="root">Deudas</ion-item>
+      <ion-item routerLink="/reportes" routerDirection="root">Reportes</ion-item>
+      <ion-item (click)="cerrarSesion()">Cerrar sesión</ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu>
+
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Mis Finanzas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrarSesion()">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" id="main-content">
+
+  <!-- Botones para cambiar tipo de gráfica -->
+  <ion-segment [(ngModel)]="tipoSeleccionado" (ionChange)="cambiarTipo(tipoSeleccionado)" class="ion-margin-bottom">
+    <ion-segment-button value="ingreso">
+      <ion-label>Ingresos</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="gasto">
+      <ion-label>Gastos</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Gráfica -->
+  <div style="display: block; width: 100%; max-width: 400px; margin: auto;">
+    <canvas 
+    baseChart
+    [data]="chartData"
+    [type]="'doughnut'">
+    </canvas>
+  </div>
+
+  <!-- Formulario -->
+  <form (submit)="agregarMovimiento()">
+    <ion-item>
+      <ion-label position="floating">Tipo</ion-label>
+      <ion-select [(ngModel)]="nuevo.tipo" name="tipo" required>
+        <ion-select-option value="ingreso">Ingreso</ion-select-option>
+        <ion-select-option value="gasto">Gasto</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Cantidad</ion-label>
+      <ion-input type="number" [(ngModel)]="nuevo.cantidad" name="cantidad" required></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Descripción</ion-label>
+      <ion-input type="text" [(ngModel)]="nuevo.descripcion" name="descripcion" required></ion-input>
+    </ion-item>
+
+    <ion-button expand="full" type="submit" class="ion-margin-top">Agregar</ion-button>
+  </form>
+
+  <!-- Lista de movimientos -->
+  <ion-list>
+    <ion-item *ngFor="let m of movimientos">
+      <ion-label>
+        <h2>{{ m.descripcion }}</h2>
+        <p>{{ m.tipo | titlecase }} - {{ m.cantidad | currency:'USD' }}</p>
+        <p>{{ m.fecha | date:'short' }}</p>
+      </ion-label>
+      <ion-button fill="clear" color="danger" slot="end" (click)="eliminarMovimiento(m.id)">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+</ion-content>
