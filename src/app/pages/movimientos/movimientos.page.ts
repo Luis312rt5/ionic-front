@@ -184,7 +184,7 @@ const centerTextPlugin: Plugin<'doughnut'> = {
     ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = 'white';
     ctx.fillText(`$${total.toFixed(2)}`, width / 2, height / 2);
     ctx.restore();
   }

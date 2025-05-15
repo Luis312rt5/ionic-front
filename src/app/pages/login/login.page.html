@@ -4,24 +4,31 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <form (submit)="login()">
-    <ion-item>
-      <ion-label position="floating">Email</ion-label>
-      <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
+<ion-content class="login-content">
+  <div class="background-decoration">
+    <div class="top-blob"></div>
+    <div class="bottom-blob"></div>
+  </div>
+  
+  <form (submit)="login()" class="login-form">    
+    <ion-item lines="none" class="input-item">
+      <ion-icon slot="start" name="mail-outline"></ion-icon>
+      <ion-input type="email" placeholder="Email" [(ngModel)]="email" name="email" required></ion-input>
     </ion-item>
-
-    <ion-item>
-      <ion-label position="floating">Contraseña</ion-label>
-      <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
+    
+    <ion-item lines="none" class="input-item">
+      <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+      <ion-input type="password" placeholder="Contraseña" [(ngModel)]="password" name="password" required></ion-input>
     </ion-item>
-
-    <ion-button expand="full" type="submit" class="ion-margin-top">
-      Entrar
-    </ion-button>
-    <ion-button expand="full" fill="clear" routerLink="/register">
-    ¿No tienes cuenta? Regístrate
-    </ion-button>
-
+    
+    <div class="button-container">
+      <ion-button type="submit" class="login-button">
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </ion-button>
+      
+      <ion-button fill="clear" class="register-button" routerLink="/register">
+        ¿No tienes cuenta? Regístrate
+      </ion-button>
+    </div>
   </form>
 </ion-content>
