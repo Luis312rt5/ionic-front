@@ -1,0 +1,114 @@
+ion-content {
+  --background: transparent;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  height: 100%;
+}
+
+.login-content {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+
+  .background-decoration {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+
+    .top-blob {
+      position: absolute;
+      background-color: #e6f2f9;
+      border-radius: 50%;
+      width: 200px;
+      height: 200px;
+      top: -100px;
+      left: -50px;
+    }
+
+    .bottom-blob {
+      position: absolute;
+      background-color: #e6f2f9;
+      border-radius: 50%;
+      width: 280px;
+      height: 280px;
+      bottom: -120px;
+      right: -80px;
+    }
+  }
+
+  .login-form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 40px);
+    max-width: 360px;
+    background: #ffffffee;
+    border-radius: 20px;
+    padding: 2rem;
+    z-index: 1;
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    .input-item {
+      border-radius: 25px;
+      background: #f2f2f2;
+      margin-bottom: 20px;
+      width: 100%;
+      --background: #f2f2f2;
+      --padding-start: 16px;
+      --padding-end: 16px;
+      --inner-padding-end: 16px;
+
+      ion-icon {
+        color: #777;
+        margin-right: 8px;
+      }
+
+      ion-input {
+        --padding-start: 8px;
+        font-size: 15px;
+      }
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin-top: 20px;
+
+      .login-button {
+        --border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        --background: #1e1ef0;
+        ion-icon {
+          font-size: 24px;
+        }
+      }
+
+      .register-button {
+        --color: #27ae60;
+        font-size: 14px;
+        font-weight: 500;
+        text-transform: none;
+        margin-top: 20px;
+      }
+    }
+  }
+}

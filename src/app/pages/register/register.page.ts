@@ -5,6 +5,7 @@ import { NavController, ToastController } from '@ionic/angular';
 @Component({
   selector: 'app-register',
   templateUrl: './register.page.html',
+  styleUrls: ['./register.page.scss'],
   standalone: false
 })
 export class RegisterPage {
