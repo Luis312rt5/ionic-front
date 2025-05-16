@@ -1,10 +1,12 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Storage } from '@ionic/storage-angular';
-import { NavController, AlertController } from '@ionic/angular';
+import { NavController, AlertController, IonModal, DatetimeChangeEventDetail } from '@ionic/angular';
 import { Chart, ChartConfiguration, Plugin, registerables } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import ChartDataLabels from 'chartjs-plugin-datalabels'; // Importa el plugin
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { NgForm } from '@angular/forms';
+import { IonDatetimeCustomEvent } from '@ionic/core';
 
 @Component({
   selector: 'app-movimientos',
@@ -12,10 +14,39 @@ import ChartDataLabels from 'chartjs-plugin-datalabels'; // Importa el plugin
   standalone: false
 })
 export class MovimientosPage implements OnInit {
+// Este método se ejecuta cuando el usuario cambia la fecha
+onFechaCambio(event: any) {
+  const valor = event.detail?.value;
+  if (this.mostrarSelector) {
+    this.nuevo.fecha = valor;
+  } else if (this.mostrarSelectorEditar) {
+    this.movimientoSeleccionado.fecha = valor;
+  }
+}
+
+alCerrarFecha() {
+  this.mostrarSelector = false;
+  this.mostrarSelectorEditar = false;
+}
+
+onFechaBlur() {
+throw new Error('Method not implemented.');
+}
+onFechaChange($event: IonDatetimeCustomEvent<DatetimeChangeEventDetail>) {
+throw new Error('Method not implemented.');
+}
   movimientos: any[] = [];
   tipoSeleccionado: 'ingreso' | 'gasto' = 'ingreso';
+  mostrarModalEditar: boolean = false;
+  movimientoSeleccionado: any = {};
+  mostrarSelector: boolean = false;
+  mostrarSelectorEditar: boolean = false;
+  fechaActual: string = new Date().toISOString();
+  fechaMaxima: string = new Date().toISOString();
 
   @ViewChild(BaseChartDirective) chart: BaseChartDirective | undefined;
+  @ViewChild('modalEditar') modalEditar!: IonModal;
+  @ViewChildren('form') form!: QueryList<NgForm>;
 
   chartType: any = 'doughnut';
 
@@ -47,11 +78,18 @@ export class MovimientosPage implements OnInit {
     }
   };
 
+  nuevo = {
+    tipo: 'ingreso',
+    cantidad: null,
+    descripcion: '',
+    fecha: ''
+  };
+
   constructor(
     private http: HttpClient,
     private storage: Storage,
     private navCtrl: NavController,
-    private alertController: AlertController // 👈 Importado aquí
+    private alertController: AlertController
   ) {
     Chart.register(...registerables);
     Chart.register(ChartDataLabels);
@@ -76,13 +114,6 @@ export class MovimientosPage implements OnInit {
     this.navCtrl.navigateRoot('/login');
   }
 
-  nuevo = {
-    tipo: 'ingreso',
-    cantidad: null,
-    descripcion: ''
-  };
-
-  // ✅ NUEVO: Calcula ingresos y gastos totales
   calcularTotales() {
     const ingresos = this.movimientos
       .filter(m => m.tipo === 'ingreso')
@@ -96,6 +127,10 @@ export class MovimientosPage implements OnInit {
   }
 
   async agregarMovimiento() {
+    if (!this.nuevo.fecha) {
+      this.nuevo.fecha = new Date().toISOString();
+    }
+
     const token = await this.storage.get('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
@@ -115,7 +150,7 @@ export class MovimientosPage implements OnInit {
     this.http.post('http://localhost:3000/api/movimientos', this.nuevo, { headers })
       .subscribe({
         next: () => {
-          this.nuevo = { tipo: 'ingreso', cantidad: null, descripcion: '' };
+          this.nuevo = { tipo: 'ingreso', cantidad: null, descripcion: '', fecha: '' };
           this.cargarMovimientos();
         },
         error: (err) => console.error('Error al agregar movimiento', err),
@@ -170,9 +205,65 @@ export class MovimientosPage implements OnInit {
         });
     });
   }
+
+  abrirModalEditar(movimiento: any) {
+    this.movimientoSeleccionado = { ...movimiento };
+    this.mostrarModalEditar = true;
+  }
+
+  cerrarModalEditar() {
+    this.mostrarModalEditar = false;
+    this.movimientoSeleccionado = {};
+  }
+
+  async actualizarMovimiento() {
+    const token = await this.storage.get('token');
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    const { ingresos, gastos } = this.calcularTotales();
+    const cantidad = Number(this.movimientoSeleccionado.cantidad || 0);
+    const movimientoOriginal = this.movimientos.find(m => m.id === this.movimientoSeleccionado.id);
+
+    let nuevoGastoTotal = gastos;
+    let nuevoIngresoTotal = ingresos;
+
+    if (movimientoOriginal.tipo === 'gasto') {
+      nuevoGastoTotal -= Number(movimientoOriginal.cantidad || 0);
+    } else {
+      nuevoIngresoTotal -= Number(movimientoOriginal.cantidad || 0);
+    }
+
+    if (this.movimientoSeleccionado.tipo === 'gasto') {
+      nuevoGastoTotal += cantidad;
+    } else {
+      nuevoIngresoTotal += cantidad;
+    }
+
+    if (this.movimientoSeleccionado.tipo === 'gasto' && nuevoGastoTotal > nuevoIngresoTotal) {
+      const alerta = await this.alertController.create({
+        header: 'Gasto no permitido',
+        message: 'No puedes registrar más gastos que ingresos.',
+        buttons: ['Aceptar']
+      });
+      await alerta.present();
+      return;
+    }
+
+    this.http.put(`http://localhost:3000/api/movimientos/${this.movimientoSeleccionado.id}`, this.movimientoSeleccionado, { headers })
+      .subscribe({
+        next: () => {
+          const index = this.movimientos.findIndex(m => m.id === this.movimientoSeleccionado.id);
+          if (index !== -1) {
+            this.movimientos[index] = { ...this.movimientoSeleccionado };
+          }
+          this.cerrarModalEditar();
+          this.actualizarGrafica();
+        },
+        error: (err) => console.error('Error al actualizar movimiento', err),
+      });
+  }
 }
 
-// Plugin personalizado para mostrar el total en el centro
 const centerTextPlugin: Plugin<'doughnut'> = {
   id: 'centerText',
   beforeDraw: (chart) => {
@@ -184,7 +275,7 @@ const centerTextPlugin: Plugin<'doughnut'> = {
     ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#000';
     ctx.fillText(`$${total.toFixed(2)}`, width / 2, height / 2);
     ctx.restore();
   }

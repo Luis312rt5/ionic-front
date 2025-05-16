@@ -1,0 +1,67 @@
+<ion-menu contentId="main-content" type="overlay">
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-title>Menú</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list>
+      <ion-item routerLink="/movimientos" routerDirection="root">Movimientos</ion-item>
+      <ion-item routerLink="/deudas" routerDirection="root">Deudas</ion-item>
+      <ion-item routerLink="/reportes" routerDirection="root">Reportes</ion-item>
+      <ion-item (click)="cerrarSesion()">Cerrar sesión</ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu>
+
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Reportes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrarSesion()">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" id="main-content">
+  <!-- Selector de período -->
+  <ion-segment (ionChange)="cambiarPeriodo($event)" value="mensual">
+    <ion-segment-button value="diario">
+      <ion-label>Diario</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="semanal">
+      <ion-label>Semanal</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="mensual">
+      <ion-label>Mensual</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="anual">
+      <ion-label>Anual</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <ion-card style="width: 100%; overflow: visible;">
+    <ion-card-header>
+      <ion-card-title>Resumen General</ion-card-title>
+    </ion-card-header>
+    <ion-card-content style="white-space: nowrap;">
+      <p><strong>Ingresos:</strong> {{ resumen.ingresos | currency:'USD' }}</p>
+      <p><strong>Gastos:</strong> {{ resumen.gastos | currency:'USD' }}</p>
+      <p><strong>Ahorro:</strong> {{ resumen.ahorro | currency:'USD' }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <div style="display: block; width: 100%; max-width: 600px; margin: auto;">
+    <canvas
+      baseChart
+      [data]="chartData"
+      [options]="chartOptions"
+      [type]="'bar'">
+    </canvas>
+  </div>
+</ion-content>
