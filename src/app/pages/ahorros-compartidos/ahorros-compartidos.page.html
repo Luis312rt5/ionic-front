@@ -1,0 +1,94 @@
+<!-- Menú -->
+<ion-menu contentId="main-content" type="overlay">
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-title>Menú</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list>
+      <ion-item routerLink="/movimientos" routerDirection="root">Movimientos</ion-item>
+      <ion-item routerLink="/deudas" routerDirection="root">Deudas</ion-item>
+      <ion-item routerLink="/reportes" routerDirection="root">Reportes</ion-item>
+      <ion-item routerLink="/ahorros-compartidos" routerDirection="root">Ahorros Compartidos</ion-item>
+      <ion-item (click)="cerrarSesion()">Cerrar sesión</ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu>
+
+<!-- Encabezado -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Ahorros Compartidos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrarSesion()">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- Contenido -->
+<ion-content id="main-content" class="ion-padding">
+  <ion-list *ngIf="ahorros.length > 0">
+    <ion-item *ngFor="let ahorro of ahorros" (click)="abrirModal(ahorro)">
+      <ion-label>
+        <h2>{{ ahorro.nombre }}</h2>
+        <p>{{ ahorro.descripcion }}</p>
+        <p>Meta: {{ ahorro.meta | currency:'USD' }}</p>
+        <p>Actual: {{ ahorro.monto_actual | currency:'USD' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-text *ngIf="ahorros.length === 0">
+    No tienes ahorros compartidos aún.
+  </ion-text>
+
+  <!-- Modal -->
+  <ion-modal [isOpen]="!!selectedAhorro" (didDismiss)="cerrarModal()" cssClass="custom-modal">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ selectedAhorro?.nombre }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="cerrarModal()">Cerrar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <p>{{ selectedAhorro?.descripcion }}</p>
+      <p>Meta: {{ selectedAhorro?.meta | currency:'USD' }}</p>
+      <p>Actual: {{ selectedAhorro?.monto_actual | currency:'USD' }}</p>
+
+      <!-- Aportar -->
+      <ion-item>
+        <ion-label position="floating">Monto a aportar</ion-label>
+        <ion-input type="number" [(ngModel)]="montoAportar"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" (click)="aportar()" [disabled]="montoAportar <= 0">
+        Aportar
+      </ion-button>
+
+      <!-- Asociar usuario -->
+      <ng-container *ngIf="esCreador()">
+        <ion-item>
+          <ion-label position="floating">Email del usuario a asociar</ion-label>
+          <ion-input type="email" [(ngModel)]="emailNuevoUsuario"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" color="success" (click)="agregarUsuario()" [disabled]="!emailNuevoUsuario">
+          Asociar usuario al ahorro
+        </ion-button>
+      </ng-container>
+    </ion-content>
+  </ion-modal>
+</ion-content>
+
+<!-- Pie de página -->
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="full" routerLink="/crear-ahorro">Nuevo Ahorro</ion-button>
+  </ion-toolbar>
+</ion-footer>

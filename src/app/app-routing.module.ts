@@ -31,7 +31,18 @@ const routes: Routes = [
     path: 'reportes',
     loadChildren: () => import('./pages/reportes/reportes.module').then( m => m.ReportesPageModule)
   },
-  
+  {
+    path: 'ahorros-compartidos',
+    loadChildren: () => import('./pages/ahorros-compartidos/ahorros-compartidos.module').then( m => m.AhorrosCompartidosPageModule)
+  },
+  {
+    path: 'crear-ahorro',
+    loadChildren: () => import('./pages/crear-ahorro/crear-ahorro.module').then( m => m.CrearAhorroPageModule)
+  }
+
+
+
+
 ];
 
 @NgModule({

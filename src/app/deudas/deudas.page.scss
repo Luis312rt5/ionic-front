@@ -1,0 +1,58 @@
+ion-content {
+  --background: #f1f4f9;
+  padding: 1rem;
+}
+
+.form-deuda {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+
+  ion-item {
+    --background: transparent;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+
+  ion-input {
+    font-size: 15px;
+  }
+
+  ion-button {
+    margin-top: 1rem;
+  }
+}
+
+.lista-deudas {
+  max-width: 500px;
+  margin: 0 auto;
+
+  ion-item {
+    background: #ffffff;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 0.5rem;
+
+    ion-label h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    ion-label p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    ion-button {
+      margin-left: auto;
+    }
+  }
+}

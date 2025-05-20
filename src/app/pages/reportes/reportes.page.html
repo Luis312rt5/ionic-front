@@ -28,8 +28,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" id="main-content">
-  <!-- Selector de período -->
+<ion-content id="main-content">
   <ion-segment (ionChange)="cambiarPeriodo($event)" value="mensual">
     <ion-segment-button value="diario">
       <ion-label>Diario</ion-label>
@@ -45,23 +44,18 @@
     </ion-segment-button>
   </ion-segment>
 
-  <ion-card style="width: 100%; overflow: visible;">
+  <ion-card>
     <ion-card-header>
       <ion-card-title>Resumen General</ion-card-title>
     </ion-card-header>
-    <ion-card-content style="white-space: nowrap;">
+    <ion-card-content>
       <p><strong>Ingresos:</strong> {{ resumen.ingresos | currency:'USD' }}</p>
       <p><strong>Gastos:</strong> {{ resumen.gastos | currency:'USD' }}</p>
       <p><strong>Ahorro:</strong> {{ resumen.ahorro | currency:'USD' }}</p>
     </ion-card-content>
   </ion-card>
 
-  <div style="display: block; width: 100%; max-width: 600px; margin: auto;">
-    <canvas
-      baseChart
-      [data]="chartData"
-      [options]="chartOptions"
-      [type]="'bar'">
-    </canvas>
+  <div class="chart-container">
+    <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'bar'"></canvas>
   </div>
 </ion-content>
