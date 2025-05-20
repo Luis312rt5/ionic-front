@@ -21,7 +21,7 @@ export class ReportesPage implements OnInit {
 
   @ViewChild(BaseChartDirective) chart: BaseChartDirective | undefined;
 
-  periodoSeleccionado: 'diario' | 'semanal' | 'mensual' | 'anual' = 'mensual'; // Valor por defecto
+  periodoSeleccionado: 'diario' | 'semanal' | 'mensual' | 'anual' = 'mensual';
 
   chartData: ChartConfiguration<'bar'>['data'] = {
     labels: [],
@@ -56,6 +56,14 @@ export class ReportesPage implements OnInit {
       },
       datalabels: {
         display: false
+      },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          label: function(context) {
+            return `$${Number(context.raw).toFixed(2)}`;
+          }
+        }
       }
     },
     scales: {
@@ -113,19 +121,19 @@ export class ReportesPage implements OnInit {
 
     switch (this.periodoSeleccionado) {
       case 'diario':
-        inicioPeriodo.setHours(0, 0, 0, 0); // Inicio del día actual
+        inicioPeriodo.setHours(0, 0, 0, 0);
         break;
       case 'semanal':
         const diaSemana = ahora.getDay();
-        inicioPeriodo.setDate(ahora.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1)); // Lunes de la semana actual
+        inicioPeriodo.setDate(ahora.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
         inicioPeriodo.setHours(0, 0, 0, 0);
         break;
       case 'mensual':
-        inicioPeriodo.setDate(1); // Inicio del mes actual
+        inicioPeriodo.setDate(1);
         inicioPeriodo.setHours(0, 0, 0, 0);
         break;
       case 'anual':
-        inicioPeriodo.setMonth(0, 1); // Inicio del año actual
+        inicioPeriodo.setMonth(0, 1);
         inicioPeriodo.setHours(0, 0, 0, 0);
         break;
     }
@@ -164,7 +172,7 @@ export class ReportesPage implements OnInit {
         case 'semanal':
           const primerDiaSemana = new Date(fecha);
           const diaSemana = fecha.getDay();
-          primerDiaSemana.setDate(fecha.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1)); // Lunes de la semana
+          primerDiaSemana.setDate(fecha.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
           clave = `${primerDiaSemana.getFullYear()}-${String(primerDiaSemana.getMonth() + 1).padStart(2, '0')}-${String(primerDiaSemana.getDate()).padStart(2, '0')}`;
           break;
         case 'mensual':
@@ -185,6 +193,7 @@ export class ReportesPage implements OnInit {
 
     for (const clave in resumenPorPeriodo) {
       resumenPorPeriodo[clave].ahorro = resumenPorPeriodo[clave].ingreso - resumenPorPeriodo[clave].gasto;
+      if (resumenPorPeriodo[clave].ahorro < 0) resumenPorPeriodo[clave].ahorro = 0;
     }
 
     const periodos = Object.keys(resumenPorPeriodo).sort();
