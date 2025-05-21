@@ -30,7 +30,7 @@
 </ion-header>
 
 <ion-content class="ion-padding" id="main-content">
-  <ion-segment [(ngModel)]="tipoSeleccionado" (ionChange)="cambiarTipo(tipoSeleccionado)" class="ion-margin-bottom">
+  <ion-segment [(ngModel)]="tipoSeleccionado" (ionChange)="cambiarTipo(tipoSeleccionado)" class="segment-container">
     <ion-segment-button value="ingreso">
       <ion-label>Ingresos📈</ion-label>
     </ion-segment-button>
@@ -39,11 +39,11 @@
     </ion-segment-button>
   </ion-segment>
 
-  <div style="display: block; width: 100%; max-width: 400px; margin: auto;">
+  <div class="grafica-container">
     <canvas baseChart [data]="chartData" [type]="'doughnut'"></canvas>
   </div>
 
-  <form (submit)="agregarMovimiento()" #form="ngForm">
+  <form (submit)="agregarMovimiento()" #form="ngForm" class="formulario-movimiento">
     <ion-item>
       <ion-label position="floating">Tipo</ion-label>
       <ion-select [(ngModel)]="nuevo.tipo" name="tipo" required>
@@ -64,27 +64,24 @@
 
     <ion-item lines="none" button (click)="mostrarSelector = true">
       <ion-label>Fecha</ion-label>
-      <ion-label class="fecha-texto" style="margin-left:auto; background: var(--ion-color-light); padding: 6px 12px; border-radius: 8px; font-weight: 500;">{{ nuevo.fecha ? (nuevo.fecha | date:'dd/MM/yyyy, h:mm a') : 'dd/mm/aaaa' }}</ion-label>
+      <ion-text slot="end" class="fecha-texto">{{ nuevo.fecha ? (nuevo.fecha | date:'M/d/yy, h:mm a') : 'dd/mm/aaaa' }}</ion-text>
       <ion-icon name="calendar-outline" slot="end"></ion-icon>
     </ion-item>
 
-    <ion-modal [isOpen]="mostrarSelector" (didDismiss)="mostrarSelector = false" cssClass="custom-date-modal-centered shadow-overlay" backdropDismiss="true">
+    <ion-modal [isOpen]="mostrarSelector" (didDismiss)="mostrarSelector = false" cssClass="custom-date-modal-centered" backdropDismiss="true">
       <ng-template>
         <ion-content class="ion-padding">
-          <div class="modal-wrapper">
-            <ion-datetime
-              presentation="date-time"
-              [(ngModel)]="nuevo.fecha"
-              name="fecha"
-              [max]="fechaMaxima"
-              [value]="nuevo.fecha"
-              (ionChange)="onFechaCambio($event)"
-              (ionBlur)="alCerrarFecha()"
-              showDefaultButtons="true"
-              doneText="Aceptar"
-              cancelText="Cancelar">
-            </ion-datetime>
-          </div>
+          <ion-datetime
+            presentation="date-time"
+            [(ngModel)]="nuevo.fecha"
+            name="fecha"
+            [max]="fechaMaxima"
+            (ionChange)="onFechaCambio($event)"
+            (ionBlur)="onFechaBlur()"
+            showDefaultButtons="true"
+            doneText="Seleccionar"
+            cancelText="Cancelar">
+          </ion-datetime>
         </ion-content>
       </ng-template>
     </ion-modal>
@@ -119,7 +116,7 @@
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
-        <form (submit)="actualizarMovimiento()">
+        <form (submit)="actualizarMovimiento()" class="formulario-movimiento">
           <ion-item>
             <ion-label position="floating">Tipo</ion-label>
             <ion-select [(ngModel)]="movimientoSeleccionado.tipo" name="tipo" required>
@@ -137,27 +134,24 @@
           </ion-item>
           <ion-item lines="none" button (click)="mostrarSelectorEditar = true">
             <ion-label>Fecha</ion-label>
-            <ion-label class="fecha-texto" style="margin-left:auto; background: var(--ion-color-light); padding: 6px 12px; border-radius: 8px; font-weight: 500;">{{ movimientoSeleccionado.fecha ? (movimientoSeleccionado.fecha | date:'dd/MM/yyyy, h:mm a') : 'dd/mm/aaaa' }}</ion-label>
+            <ion-text slot="end" class="fecha-texto">{{ movimientoSeleccionado.fecha ? (movimientoSeleccionado.fecha | date:'M/d/yy, h:mm a') : 'dd/mm/aaaa' }}</ion-text>
             <ion-icon name="calendar-outline" slot="end"></ion-icon>
           </ion-item>
 
-          <ion-modal [isOpen]="mostrarSelectorEditar" (didDismiss)="mostrarSelectorEditar = false" cssClass="custom-date-modal-centered shadow-overlay" backdropDismiss="true">
+          <ion-modal [isOpen]="mostrarSelectorEditar" (didDismiss)="mostrarSelectorEditar = false" cssClass="custom-date-modal-centered" backdropDismiss="true">
             <ng-template>
               <ion-content class="ion-padding">
-                <div class="modal-wrapper">
-                  <ion-datetime
-                    [(ngModel)]="movimientoSeleccionado.fecha"
-                    name="fecha"
-                    presentation="date-time"
-                    [max]="fechaMaxima"
-                    [value]="movimientoSeleccionado.fecha"
-                    (ionChange)="onFechaCambio($event)"
-                    (ionBlur)="alCerrarFecha()"
-                    showDefaultButtons="true"
-                    doneText="Aceptar"
-                    cancelText="Cancelar">
-                  </ion-datetime>
-                </div>
+                <ion-datetime
+                  [(ngModel)]="movimientoSeleccionado.fecha"
+                  name="fecha"
+                  presentation="date-time"
+                  [max]="fechaMaxima"
+                  (ionChange)="onFechaCambio($event)"
+                  (ionBlur)="onFechaBlur()"
+                  showDefaultButtons="true"
+                  doneText="Seleccionar"
+                  cancelText="Cancelar">
+                </ion-datetime>
               </ion-content>
             </ng-template>
           </ion-modal>

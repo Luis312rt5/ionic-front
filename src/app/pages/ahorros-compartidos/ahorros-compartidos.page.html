@@ -76,14 +76,21 @@
 
       <!-- Asociar usuario -->
       <ng-container *ngIf="esCreador()">
+        <ion-toolbar>
         <ion-item>
           <ion-label position="floating">Email del usuario a asociar</ion-label>
           <ion-input type="email" [(ngModel)]="emailNuevoUsuario"></ion-input>
+          <ion-buttons slot="end">
+            <ion-button class="cerrar-x" (click)="cancelar()">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
         </ion-item>
 
         <ion-button expand="block" color="success" (click)="agregarUsuario()" [disabled]="!emailNuevoUsuario">
           Asociar usuario al ahorro
         </ion-button>
+        </ion-toolbar>
       </ng-container>
     </ion-content>
   </ion-modal>

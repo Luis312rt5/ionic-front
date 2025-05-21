@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AhorrosCompartidosService } from '../../services/ahorros-compartidos.service';
 import { Storage } from '@ionic/storage-angular';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { ToastController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-ahorros-compartidos',
@@ -22,7 +22,8 @@ export class AhorrosCompartidosPage implements OnInit {
     private ahorrosService: AhorrosCompartidosService,
     private storage: Storage,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private navCtrl: NavController
   ) {
     this.initStorage();
   }
@@ -71,6 +72,10 @@ export class AhorrosCompartidosPage implements OnInit {
 
   cerrarModal() {
     this.selectedAhorro = null;
+  }
+
+  cancelar() {
+    this.cerrarModal();
   }
 
   async aportar() {
