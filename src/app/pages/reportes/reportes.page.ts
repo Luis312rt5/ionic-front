@@ -84,6 +84,7 @@ export class ReportesPage implements OnInit, OnDestroy {
       }
     }
   };
+mainMenu: any;
 
   constructor(
     private http: HttpClient,

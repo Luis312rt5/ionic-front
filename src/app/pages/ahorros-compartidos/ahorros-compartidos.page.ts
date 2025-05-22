@@ -17,6 +17,7 @@ export class AhorrosCompartidosPage implements OnInit {
   montoAportar: number = 0;
   emailNuevoUsuario: string = '';
   userId: number = 0;
+mainMenu: any;
 
   constructor(
     private ahorrosService: AhorrosCompartidosService,
