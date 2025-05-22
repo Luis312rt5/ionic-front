@@ -37,4 +37,8 @@ export class CrearAhorroPage {
     await this.storage.remove('token');
     this.router.navigate(['/login']);
   }
+  volver() {
+  window.history.back();
+}
+
 }

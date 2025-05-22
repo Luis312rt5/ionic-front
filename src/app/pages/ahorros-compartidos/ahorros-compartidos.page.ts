@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AhorrosCompartidosService } from '../../services/ahorros-compartidos.service';
 import { Storage } from '@ionic/storage-angular';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-ahorros-compartidos',
@@ -12,17 +12,24 @@ import { ToastController } from '@ionic/angular';
 })
 export class AhorrosCompartidosPage implements OnInit {
   ahorros: any[] = [];
-
   selectedAhorro: any = null;
   montoAportar: number = 0;
   emailNuevoUsuario: string = '';
   userId: number = 0;
 
+  aportes: any[] = [];
+  mostrarAportes = false;
+
+  mostrarPopover = false;
+  eventoPopover: any;
+  ahorroEnOpciones: any = null;
+
   constructor(
     private ahorrosService: AhorrosCompartidosService,
     private storage: Storage,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private alertController: AlertController
   ) {
     this.initStorage();
   }
@@ -63,28 +70,84 @@ export class AhorrosCompartidosPage implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  mostrarOpciones(event: any, ahorro: any) {
+    event.stopPropagation();
+    this.eventoPopover = event;
+    this.ahorroEnOpciones = ahorro;
+    this.mostrarPopover = true;
+  }
+
+  cerrarPopover() {
+    this.mostrarPopover = false;
+    this.ahorroEnOpciones = null;
+  }
+
+  async accionDesdePopover(accion: string, ahorro: any) {
+    this.cerrarPopover();
+    switch (accion) {
+      case 'aporte':
+        this.abrirModalParaAportar(ahorro);
+        break;
+      case 'usuario':
+        this.abrirModalParaAgregarUsuario(ahorro);
+        break;
+      case 'eliminar':
+        await this.confirmarEliminarAhorro(ahorro);
+        break;
+    }
+  }
+
   abrirModal(ahorro: any) {
     this.selectedAhorro = ahorro;
     this.montoAportar = 0;
     this.emailNuevoUsuario = '';
+    this.cargarAportes(ahorro);
+  }
+
+  abrirModalParaAportar(ahorro: any) {
+    this.selectedAhorro = ahorro;
+    this.montoAportar = 0;
+    this.emailNuevoUsuario = '';
+    this.cargarAportes(ahorro);
+  }
+
+  abrirModalParaAgregarUsuario(ahorro: any) {
+    this.selectedAhorro = ahorro;
+    this.emailNuevoUsuario = '';
+    this.montoAportar = 0;
+    this.cargarAportes(ahorro);
   }
 
   cerrarModal() {
     this.selectedAhorro = null;
+    this.montoAportar = 0;
+    this.emailNuevoUsuario = '';
+    this.aportes = [];
+    this.mostrarAportes = false;
   }
 
   async aportar() {
-    if (!this.selectedAhorro || this.montoAportar <= 0) return;
+    if (!this.selectedAhorro || this.montoAportar <= 0) {
+      this.mostrarToast('Ingresa un monto válido mayor a 0', 'warning');
+      return;
+    }
 
     try {
       const response$ = await this.ahorrosService.aportarAhorro(
         this.selectedAhorro.id,
         this.montoAportar
       );
-      response$.subscribe(() => {
-        this.cargarAhorros();
-        this.cerrarModal();
-        this.mostrarToast('Aporte exitoso');
+      response$.subscribe({
+        next: () => {
+          this.cargarAhorros();
+          this.cargarAportes(this.selectedAhorro);
+          this.montoAportar = 0;
+          this.mostrarToast('Aporte realizado exitosamente', 'success');
+        },
+        error: (error) => {
+          console.error('Error al aportar:', error);
+          this.mostrarToast('Error al realizar el aporte', 'danger');
+        }
       });
     } catch (error) {
       console.error('Error al aportar al ahorro:', error);
@@ -92,25 +155,22 @@ export class AhorrosCompartidosPage implements OnInit {
     }
   }
 
-  esCreador(): boolean {
-    return this.selectedAhorro?.creador_id === this.userId;
-  }
-
   async agregarUsuario() {
     if (!this.selectedAhorro || !this.emailNuevoUsuario.trim()) {
-      this.mostrarToast('Ingresa un correo válido', 'danger');
+      this.mostrarToast('Ingresa un correo válido', 'warning');
       return;
     }
 
     try {
       const response$ = await this.ahorrosService.agregarUsuarioPorEmail(
         this.selectedAhorro.id,
-        this.emailNuevoUsuario
+        this.emailNuevoUsuario.trim()
       );
       response$.subscribe({
         next: () => {
-          this.mostrarToast('Usuario agregado correctamente');
+          this.mostrarToast('Usuario agregado correctamente', 'success');
           this.emailNuevoUsuario = '';
+          this.cargarAportes(this.selectedAhorro);
         },
         error: err => {
           const msg = err?.error?.error || 'Error al agregar usuario';
@@ -122,12 +182,81 @@ export class AhorrosCompartidosPage implements OnInit {
     }
   }
 
+  async confirmarEliminarAhorro(ahorro: any) {
+    const alert = await this.alertController.create({
+      header: 'Confirmar eliminación',
+      message: `¿Estás seguro de que deseas eliminar el ahorro "${ahorro.nombre}"?`,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: () => {
+            this.eliminarAhorro(ahorro.id);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async eliminarAhorro(ahorroId: number) {
+    try {
+      const response$ = await this.ahorrosService.eliminarAhorro(ahorroId);
+      response$.subscribe({
+        next: () => {
+          this.ahorros = this.ahorros.filter(a => a.id !== ahorroId);
+          this.mostrarToast('Ahorro eliminado correctamente', 'success');
+        },
+        error: (error) => {
+          console.error('Error al eliminar el ahorro:', error);
+          this.mostrarToast('Error al eliminar el ahorro', 'danger');
+        }
+      });
+    } catch (error) {
+      console.error('Error al eliminar el ahorro:', error);
+      this.mostrarToast('Error al eliminar el ahorro', 'danger');
+    }
+  }
+
+  esCreador(): boolean {
+    return this.selectedAhorro?.creador_id === this.userId;
+  }
+
+  esCreadorDesdeId(ahorro: any): boolean {
+    return ahorro?.creador_id === this.userId;
+  }
+
   async mostrarToast(mensaje: string, color: string = 'primary') {
     const toast = await this.toastController.create({
       message: mensaje,
-      duration: 2000,
-      color
+      duration: 3000,
+      color,
+      position: 'bottom'
     });
-    toast.present();
+    await toast.present();
+  }
+
+  async cargarAportes(ahorro: any) {
+    try {
+      const response$ = await this.ahorrosService.obtenerAportes(ahorro.id);
+      response$.subscribe({
+        next: (res: any[]) => {
+          this.aportes = res;
+          this.mostrarAportes = true;
+        },
+        error: (err: any) => {
+          console.error(err);
+          this.mostrarToast('Error al cargar aportes', 'danger');
+        }
+      });
+    } catch (error) {
+      console.error('Error cargando aportes:', error);
+      this.mostrarToast('Error inesperado', 'danger');
+    }
   }
 }

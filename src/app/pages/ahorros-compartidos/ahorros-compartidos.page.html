@@ -1,94 +1,214 @@
-<!-- Menú -->
-<ion-menu contentId="main-content" type="overlay">
-  <ion-header>
-    <ion-toolbar color="primary">
-      <ion-title>Menú</ion-title>
-    </ion-toolbar>
-  </ion-header>
-  <ion-content>
-    <ion-list>
-      <ion-item routerLink="/movimientos" routerDirection="root">Movimientos</ion-item>
-      <ion-item routerLink="/deudas" routerDirection="root">Deudas</ion-item>
-      <ion-item routerLink="/reportes" routerDirection="root">Reportes</ion-item>
-      <ion-item routerLink="/ahorros-compartidos" routerDirection="root">Ahorros Compartidos</ion-item>
-      <ion-item (click)="cerrarSesion()">Cerrar sesión</ion-item>
-    </ion-list>
-  </ion-content>
-</ion-menu>
-
-<!-- Encabezado -->
-<ion-header>
+<ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Ahorros Compartidos</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="cerrarSesion()">
-        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+        <ion-icon name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<!-- Contenido -->
-<ion-content id="main-content" class="ion-padding">
-  <ion-list *ngIf="ahorros.length > 0">
-    <ion-item *ngFor="let ahorro of ahorros" (click)="abrirModal(ahorro)">
-      <ion-label>
-        <h2>{{ ahorro.nombre }}</h2>
-        <p>{{ ahorro.descripcion }}</p>
-        <p>Meta: {{ ahorro.meta | currency:'USD' }}</p>
-        <p>Actual: {{ ahorro.monto_actual | currency:'USD' }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+<ion-content [fullscreen]="true">
+  <!-- Lista de Ahorros -->
+  <div class="ahorros-container">
+    <div *ngFor="let ahorro of ahorros" class="ahorro-card">
+      <ion-card (click)="abrirModal(ahorro)">
+        <ion-card-header>
+          <div class="card-header-content">
+            <ion-card-title>{{ ahorro.nombre }}</ion-card-title>
+            <ion-button 
+              fill="clear" 
+              size="small"
+              (click)="mostrarOpciones($event, ahorro)"
+              class="options-button">
+              <ion-icon name="ellipsis-vertical"></ion-icon>
+            </ion-button>
+          </div>
+          <ion-card-subtitle>{{ ahorro.descripcion }}</ion-card-subtitle>
+        </ion-card-header>
+        
+        <ion-card-content>
+          <div class="progress-info">
+            <p><strong>Meta:</strong> ${{ ahorro.meta | number:'1.2-2' }}</p>
+            <p><strong>Ahorrado:</strong> ${{ ahorro.total_actual | number:'1.2-2' }}</p>
+            <ion-progress-bar 
+              [value]="ahorro.total_actual / ahorro.meta"
+              color="success">
+            </ion-progress-bar>
+            <p class="progress-text">
+              {{ ((ahorro.total_actual / ahorro.meta) * 100) | number:'1.0-0' }}% completado
+            </p>
+          </div>
+          
+          <div class="creator-info" *ngIf="esCreadorDesdeId(ahorro)">
+            <ion-chip color="primary">
+              <ion-icon name="person"></ion-icon>
+              <ion-label>Creador</ion-label>
+            </ion-chip>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
 
-  <ion-text *ngIf="ahorros.length === 0">
-    No tienes ahorros compartidos aún.
-  </ion-text>
+  <!-- Mensaje cuando no hay ahorros -->
+  <div *ngIf="ahorros.length === 0" class="empty-state">
+    <ion-icon name="wallet-outline" size="large"></ion-icon>
+    <h3>No tienes ahorros compartidos</h3>
+    <p>Crea o únete a un ahorro compartido para comenzar</p>
+  </div>
 
-  <!-- Modal -->
-  <ion-modal [isOpen]="!!selectedAhorro" (didDismiss)="cerrarModal()" cssClass="custom-modal">
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{ selectedAhorro?.nombre }}</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="cerrarModal()">Cerrar</ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+  <!-- Popover de Opciones -->
+  <ion-popover 
+    [isOpen]="mostrarPopover" 
+    [event]="eventoPopover"
+    (didDismiss)="cerrarPopover()">
+    <ng-template>
+      <ion-content>
+        <ion-list>
+          <ion-item button (click)="accionDesdePopover('aporte', ahorroEnOpciones)">
+            <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+            <ion-label>Aportar</ion-label>
+          </ion-item>
+          
+          <ion-item button (click)="accionDesdePopover('usuario', ahorroEnOpciones)">
+            <ion-icon name="person-add-outline" slot="start"></ion-icon>
+            <ion-label>Agregar Usuario</ion-label>
+          </ion-item>
+          
+          <ion-item 
+            button 
+            (click)="accionDesdePopover('eliminar', ahorroEnOpciones)"
+            *ngIf="esCreadorDesdeId(ahorroEnOpciones)">
+            <ion-icon name="trash-outline" slot="start" color="danger"></ion-icon>
+            <ion-label color="danger">Eliminar</ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ng-template>
+  </ion-popover>
 
-    <ion-content class="ion-padding">
-      <p>{{ selectedAhorro?.descripcion }}</p>
-      <p>Meta: {{ selectedAhorro?.meta | currency:'USD' }}</p>
-      <p>Actual: {{ selectedAhorro?.monto_actual | currency:'USD' }}</p>
+  <!-- Modal Principal -->
+  <ion-modal [isOpen]="selectedAhorro !== null" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ selectedAhorro?.nombre }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      
+      <ion-content class="modal-content">
+        <!-- Información del Ahorro -->
+        <div class="ahorro-info">
+          <h3>{{ selectedAhorro?.nombre }}</h3>
+          <p>{{ selectedAhorro?.descripcion }}</p>
+          
+          <div class="meta-info">
+            <ion-item lines="none">
+              <ion-icon name="flag-outline" slot="start"></ion-icon>
+              <ion-label>
+                <h4>Meta: ${{ selectedAhorro?.meta | number:'1.2-2' }}</h4>
+              </ion-label>
+            </ion-item>
+            
+            <ion-item lines="none">
+              <ion-icon name="wallet-outline" slot="start"></ion-icon>
+              <ion-label>
+                <h4>Total Ahorrado: ${{ selectedAhorro?.total_actual | number:'1.2-2' }}</h4>
+              </ion-label>
+            </ion-item>
+            
+            <ion-progress-bar 
+              [value]="selectedAhorro?.total_actual / selectedAhorro?.meta"
+              color="success">
+            </ion-progress-bar>
+          </div>
+        </div>
 
-      <!-- Aportar -->
-      <ion-item>
-        <ion-label position="floating">Monto a aportar</ion-label>
-        <ion-input type="number" [(ngModel)]="montoAportar"></ion-input>
-      </ion-item>
+        <!-- Sección de Aporte -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Realizar Aporte</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-input 
+                type="number" 
+                placeholder="Ingresa el monto a aportar"
+                [(ngModel)]="montoAportar"
+                min="0"
+                step="0.01">
+              </ion-input>
+            </ion-item>
+            <ion-button 
+              expand="block" 
+              color="success" 
+              (click)="aportar()"
+              [disabled]="montoAportar <= 0">
+              <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+              Aportar ${{ montoAportar | number:'1.2-2' }}
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
 
-      <ion-button expand="block" (click)="aportar()" [disabled]="montoAportar <= 0">
-        Aportar
-      </ion-button>
+        <!-- Sección de Agregar Usuario (solo para creadores) -->
+        <ion-card *ngIf="esCreador()">
+          <ion-card-header>
+            <ion-card-title>Agregar Usuario</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-input 
+                type="email" 
+                placeholder="Email del nuevo usuario"
+                [(ngModel)]="emailNuevoUsuario">
+              </ion-input>
+            </ion-item>
+            <ion-button 
+              expand="block" 
+              color="primary" 
+              (click)="agregarUsuario()"
+              [disabled]="!emailNuevoUsuario.trim()">
+              <ion-icon name="person-add-outline" slot="start"></ion-icon>
+              Agregar Usuario
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
 
-      <!-- Asociar usuario -->
-      <ng-container *ngIf="esCreador()">
-        <ion-item>
-          <ion-label position="floating">Email del usuario a asociar</ion-label>
-          <ion-input type="email" [(ngModel)]="emailNuevoUsuario"></ion-input>
-        </ion-item>
-
-        <ion-button expand="block" color="success" (click)="agregarUsuario()" [disabled]="!emailNuevoUsuario">
-          Asociar usuario al ahorro
-        </ion-button>
-      </ng-container>
-    </ion-content>
+        <!-- Lista de Aportes -->
+        <ion-card *ngIf="mostrarAportes">
+          <ion-card-header>
+            <ion-card-title>Historial de Aportes</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list *ngIf="aportes.length > 0; else noAportes">
+              <ion-item *ngFor="let aporte of aportes">
+                <ion-avatar slot="start">
+                  <ion-icon name="person-circle-outline" size="large"></ion-icon>
+                </ion-avatar>
+                <ion-label>
+                  <h3>{{ aporte.usuario_nombre || 'Usuario' }}</h3>
+                  <p>Aportó: ${{ aporte.cantidad | number:'1.2-2' }}</p>
+                  <p>{{ aporte.fecha_aporte | date:'dd/MM/yyyy HH:mm' }}</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+            
+            <ng-template #noAportes>
+              <div class="empty-aportes">
+                <ion-icon name="wallet-outline"></ion-icon>
+                <p>Aún no hay aportes registrados</p>
+              </div>
+            </ng-template>
+          </ion-card-content>
+        </ion-card>
+      </ion-content>
+    </ng-template>
   </ion-modal>
 </ion-content>
-
-<!-- Pie de página -->
-<ion-footer>
-  <ion-toolbar>
-    <ion-button expand="full" routerLink="/crear-ahorro">Nuevo Ahorro</ion-button>
-  </ion-toolbar>
-</ion-footer>
