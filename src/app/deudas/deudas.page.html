@@ -1,22 +1,42 @@
 <ion-menu contentId="main-content" type="overlay">
   <ion-header>
     <ion-toolbar color="primary">
+      <ion-icon slot="start" name="menu-outline" style="font-size: 24px; padding-left: 8px;"></ion-icon>
       <ion-title>Menú</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
     <ion-list>
-      <ion-item routerLink="/movimientos" routerDirection="root">Movimientos</ion-item>
-      <ion-item routerLink="/deudas" routerDirection="root">Deudas</ion-item>
-      <ion-item routerLink="/reportes" routerDirection="root">Reportes</ion-item>
-      <ion-item (click)="cerrarSesion()">Cerrar sesión</ion-item>
-    </ion-list>
+  <ion-item routerLink="/movimientos" routerDirection="root">
+    <ion-icon slot="start" name="swap-horizontal-outline"></ion-icon>
+    Movimientos
+  </ion-item>
+
+  <ion-item routerLink="/deudas" routerDirection="root">
+    <ion-icon slot="start" name="card-outline"></ion-icon>
+    Deudas
+  </ion-item>
+
+  <ion-item routerLink="/reportes" routerDirection="root">
+    <ion-icon slot="start" name="bar-chart-outline"></ion-icon>
+    Reportes
+  </ion-item>
+
+  <ion-item routerLink="/ahorros-compartidos" routerDirection="root">
+    <ion-icon slot="start" name="people-outline"></ion-icon>
+    Ahorros Compartidos
+  </ion-item>
+
+  <ion-item (click)="cerrarSesion()">
+    <ion-icon slot="start" name="log-out-outline"></ion-icon>
+    Cerrar sesión
+  </ion-item>
+</ion-list>
   </ion-content>
 </ion-menu>
-
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
+     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Deudas</ion-title>

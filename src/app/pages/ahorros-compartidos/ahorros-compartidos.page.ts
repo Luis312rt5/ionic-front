@@ -2,7 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { AhorrosCompartidosService } from '../../services/ahorros-compartidos.service';
 import { Storage } from '@ionic/storage-angular';
 import { Router } from '@angular/router';
+<<<<<<< HEAD
 import { ToastController, AlertController } from '@ionic/angular';
+=======
+import { ToastController, NavController } from '@ionic/angular';
+>>>>>>> c092382e7fcabb678cc83125bd363c59533234f7
 
 @Component({
   selector: 'app-ahorros-compartidos',
@@ -16,6 +20,7 @@ export class AhorrosCompartidosPage implements OnInit {
   montoAportar: number = 0;
   emailNuevoUsuario: string = '';
   userId: number = 0;
+mainMenu: any;
 
   aportes: any[] = [];
   mostrarAportes = false;
@@ -29,7 +34,11 @@ export class AhorrosCompartidosPage implements OnInit {
     private storage: Storage,
     private router: Router,
     private toastController: ToastController,
+<<<<<<< HEAD
     private alertController: AlertController
+=======
+    private navCtrl: NavController
+>>>>>>> c092382e7fcabb678cc83125bd363c59533234f7
   ) {
     this.initStorage();
   }
@@ -124,6 +133,10 @@ export class AhorrosCompartidosPage implements OnInit {
     this.emailNuevoUsuario = '';
     this.aportes = [];
     this.mostrarAportes = false;
+  }
+
+  cancelar() {
+    this.cerrarModal();
   }
 
   async aportar() {

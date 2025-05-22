@@ -1,0 +1,11 @@
+.cerrar-x {
+  color: var(--ion-color-dark);
+
+  &:hover {
+    color: red;
+  }
+
+  @media (max-width: 768px) {
+    color: red; // For small screens always red if preferred
+  }
+}

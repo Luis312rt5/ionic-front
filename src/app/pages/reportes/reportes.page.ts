@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Storage } from '@ionic/storage-angular';
 import { NavController } from '@ionic/angular';
@@ -11,7 +11,7 @@ import { BaseChartDirective } from 'ng2-charts';
   styleUrls: ['./reportes.page.scss'],
   standalone: false
 })
-export class ReportesPage implements OnInit {
+export class ReportesPage implements OnInit, OnDestroy {
   movimientos: any[] = [];
   resumen = {
     ingresos: 0,
@@ -21,7 +21,7 @@ export class ReportesPage implements OnInit {
 
   @ViewChild(BaseChartDirective) chart: BaseChartDirective | undefined;
 
-  periodoSeleccionado: 'diario' | 'semanal' | 'mensual' | 'anual' = 'mensual'; // Valor por defecto
+  periodoSeleccionado: 'diario' | 'semanal' | 'mensual' | 'anual' = 'mensual';
 
   chartData: ChartConfiguration<'bar'>['data'] = {
     labels: [],
@@ -55,15 +55,36 @@ export class ReportesPage implements OnInit {
         text: 'Ingresos vs Gastos por Período',
       },
       datalabels: {
-        display: false
+        display: false, // Asegura que las etiquetas estén desactivadas
+      },
+      tooltip: {
+        enabled: true,
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: function(context) {
+            return `$${Number(context.raw).toFixed(2)}`;
+          }
+        }
       }
     },
     scales: {
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => `${value}`,
+        }
+      },
+      x: {
+        ticks: {
+          autoSkip: true,
+          maxRotation: 45,
+          minRotation: 0
+        }
       }
     }
   };
+mainMenu: any;
 
   constructor(
     private http: HttpClient,
@@ -71,6 +92,11 @@ export class ReportesPage implements OnInit {
     private navCtrl: NavController
   ) {
     Chart.register(...registerables);
+    // Desregistrar chartjs-plugin-datalabels si está presente
+    const datalabelsPlugin = Chart.registry.plugins.get('datalabels');
+    if (datalabelsPlugin) {
+      Chart.unregister(datalabelsPlugin);
+    }
   }
 
   async ngOnInit() {
@@ -82,7 +108,20 @@ export class ReportesPage implements OnInit {
       return;
     }
 
+    // Asegurarse de que chartOptions tenga datalabels desactivado
+    if (this.chartOptions && this.chartOptions.plugins) {
+      this.chartOptions.plugins.datalabels = { display: false };
+    }
+
     this.cargarMovimientos();
+  }
+
+  ngOnDestroy() {
+    // Limpiar la gráfica al salir del componente
+    if (this.chart && this.chart.chart) {
+      this.chart.chart.destroy(); // Destruye la instancia de Chart.js
+      this.chart.chart = undefined; // Limpia la referencia
+    }
   }
 
   async cargarMovimientos() {
@@ -113,19 +152,19 @@ export class ReportesPage implements OnInit {
 
     switch (this.periodoSeleccionado) {
       case 'diario':
-        inicioPeriodo.setHours(0, 0, 0, 0); // Inicio del día actual
+        inicioPeriodo.setHours(0, 0, 0, 0);
         break;
       case 'semanal':
         const diaSemana = ahora.getDay();
-        inicioPeriodo.setDate(ahora.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1)); // Lunes de la semana actual
+        inicioPeriodo.setDate(ahora.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
         inicioPeriodo.setHours(0, 0, 0, 0);
         break;
       case 'mensual':
-        inicioPeriodo.setDate(1); // Inicio del mes actual
+        inicioPeriodo.setDate(1);
         inicioPeriodo.setHours(0, 0, 0, 0);
         break;
       case 'anual':
-        inicioPeriodo.setMonth(0, 1); // Inicio del año actual
+        inicioPeriodo.setMonth(0, 1);
         inicioPeriodo.setHours(0, 0, 0, 0);
         break;
     }
@@ -164,7 +203,7 @@ export class ReportesPage implements OnInit {
         case 'semanal':
           const primerDiaSemana = new Date(fecha);
           const diaSemana = fecha.getDay();
-          primerDiaSemana.setDate(fecha.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1)); // Lunes de la semana
+          primerDiaSemana.setDate(fecha.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
           clave = `${primerDiaSemana.getFullYear()}-${String(primerDiaSemana.getMonth() + 1).padStart(2, '0')}-${String(primerDiaSemana.getDate()).padStart(2, '0')}`;
           break;
         case 'mensual':
@@ -185,6 +224,7 @@ export class ReportesPage implements OnInit {
 
     for (const clave in resumenPorPeriodo) {
       resumenPorPeriodo[clave].ahorro = resumenPorPeriodo[clave].ingreso - resumenPorPeriodo[clave].gasto;
+      if (resumenPorPeriodo[clave].ahorro < 0) resumenPorPeriodo[clave].ahorro = 0;
     }
 
     const periodos = Object.keys(resumenPorPeriodo).sort();
@@ -200,6 +240,13 @@ export class ReportesPage implements OnInit {
     this.chartData.datasets[0].data = ingresos;
     this.chartData.datasets[1].data = gastos;
     this.chartData.datasets[2].data = ahorros;
+
+    // Forzar una actualización limpia de la gráfica
+    if (this.chart && this.chart.chart) {
+      this.chart.chart.destroy(); // Destruir la gráfica anterior
+      this.chart.chart = undefined;
+      this.chart.ngOnChanges({}); // Forzar la recreación de la gráfica
+    }
 
     this.chart?.update();
   }

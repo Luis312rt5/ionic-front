@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewChildren, QueryList, ViewEncapsulation } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Storage } from '@ionic/storage-angular';
 import { NavController, AlertController, IonModal, DatetimeChangeEventDetail } from '@ionic/angular';
@@ -11,38 +11,18 @@ import { IonDatetimeCustomEvent } from '@ionic/core';
 @Component({
   selector: 'app-movimientos',
   templateUrl: './movimientos.page.html',
+  encapsulation: ViewEncapsulation.None,
   standalone: false
 })
 export class MovimientosPage implements OnInit {
-// Este método se ejecuta cuando el usuario cambia la fecha
-onFechaCambio(event: any) {
-  const valor = event.detail?.value;
-  if (this.mostrarSelector) {
-    this.nuevo.fecha = valor;
-  } else if (this.mostrarSelectorEditar) {
-    this.movimientoSeleccionado.fecha = valor;
-  }
-}
-
-alCerrarFecha() {
-  this.mostrarSelector = false;
-  this.mostrarSelectorEditar = false;
-}
-
-onFechaBlur() {
-throw new Error('Method not implemented.');
-}
-onFechaChange($event: IonDatetimeCustomEvent<DatetimeChangeEventDetail>) {
-throw new Error('Method not implemented.');
-}
   movimientos: any[] = [];
   tipoSeleccionado: 'ingreso' | 'gasto' = 'ingreso';
   mostrarModalEditar: boolean = false;
   movimientoSeleccionado: any = {};
   mostrarSelector: boolean = false;
   mostrarSelectorEditar: boolean = false;
-  fechaActual: string = new Date().toISOString();
-  fechaMaxima: string = new Date().toISOString();
+  fechaActual: string = ''; // No inicializamos con la fecha actual
+  fechaMaxima: string = '2030-12-31T23:59:59'; // Máxima fecha permitida (ajusta según tus necesidades)
 
   @ViewChild(BaseChartDirective) chart: BaseChartDirective | undefined;
   @ViewChild('modalEditar') modalEditar!: IonModal;
@@ -82,7 +62,7 @@ throw new Error('Method not implemented.');
     tipo: 'ingreso',
     cantidad: null,
     descripcion: '',
-    fecha: ''
+    fecha: '' // Sin fecha inicial
   };
 
   constructor(
@@ -128,7 +108,13 @@ throw new Error('Method not implemented.');
 
   async agregarMovimiento() {
     if (!this.nuevo.fecha) {
-      this.nuevo.fecha = new Date().toISOString();
+      const alerta = await this.alertController.create({
+        header: 'Fecha requerida',
+        message: 'Por favor selecciona una fecha.',
+        buttons: ['Aceptar']
+      });
+      await alerta.present();
+      return;
     }
 
     const token = await this.storage.get('token');
@@ -147,13 +133,29 @@ throw new Error('Method not implemented.');
       return;
     }
 
-    this.http.post('http://localhost:3000/api/movimientos', this.nuevo, { headers })
+    // Formatear la fecha para el backend (YYYY-MM-DD HH:mm:ss)
+    const fechaFormateada = this.formatDateForMySQL(new Date(this.nuevo.fecha));
+    const movimientoParaEnviar = {
+      ...this.nuevo,
+      fecha: fechaFormateada
+    };
+
+    console.log('Movimiento enviado al backend:', movimientoParaEnviar); // Depuración
+
+    this.http.post('http://localhost:3000/api/movimientos', movimientoParaEnviar, { headers })
       .subscribe({
         next: () => {
           this.nuevo = { tipo: 'ingreso', cantidad: null, descripcion: '', fecha: '' };
           this.cargarMovimientos();
         },
-        error: (err) => console.error('Error al agregar movimiento', err),
+        error: (err) => {
+          console.error('Error al agregar movimiento:', err);
+          this.alertController.create({
+            header: 'Error',
+            message: 'No se pudo agregar el movimiento. Verifica el servidor o la conexión.',
+            buttons: ['Aceptar']
+          }).then(alert => alert.present());
+        },
       });
   }
 
@@ -164,10 +166,20 @@ throw new Error('Method not implemented.');
     this.http.get<any[]>('http://localhost:3000/api/movimientos', { headers })
       .subscribe({
         next: (data) => {
-          this.movimientos = data;
+          this.movimientos = data.map(m => ({
+            ...m,
+            fecha: new Date(m.fecha).toISOString()
+          }));
           this.actualizarGrafica();
         },
-        error: (err) => console.error('Error al obtener movimientos', err),
+        error: (err) => {
+          console.error('Error al obtener movimientos:', err);
+          this.alertController.create({
+            header: 'Error',
+            message: 'No se pudieron cargar los movimientos. Verifica el servidor.',
+            buttons: ['Aceptar']
+          }).then(alert => alert.present());
+        },
       });
   }
 
@@ -201,22 +213,75 @@ throw new Error('Method not implemented.');
             this.movimientos = this.movimientos.filter(m => m.id !== id);
             this.actualizarGrafica();
           },
-          error: (err) => console.error('Error al eliminar movimiento', err),
+          error: (err) => console.error('Error al eliminar movimiento:', err),
         });
     });
   }
 
   abrirModalEditar(movimiento: any) {
-    this.movimientoSeleccionado = { ...movimiento };
+    this.movimientoSeleccionado = {
+      ...movimiento,
+      fecha: movimiento.fecha ? new Date(movimiento.fecha).toISOString() : ''
+    };
     this.mostrarModalEditar = true;
   }
 
   cerrarModalEditar() {
     this.mostrarModalEditar = false;
+    this.mostrarSelectorEditar = false;
     this.movimientoSeleccionado = {};
   }
 
+  onFechaCambio(event: IonDatetimeCustomEvent<DatetimeChangeEventDetail>) {
+    const valor = event.detail?.value;
+    console.log('Cambio de fecha detectado:', valor); // Depuración
+    if (valor) {
+      const fechaStr = Array.isArray(valor) ? valor[0] : valor;
+      const fecha = new Date(fechaStr).toISOString();
+      if (this.mostrarSelector) {
+        this.nuevo.fecha = fecha;
+        console.log('nuevo.fecha actualizado a:', this.nuevo.fecha); // Depuración
+      } else if (this.mostrarSelectorEditar) {
+        this.movimientoSeleccionado.fecha = fecha;
+        console.log('movimientoSeleccionado.fecha actualizado a:', this.movimientoSeleccionado.fecha); // Depuración
+      }
+    }
+  }
+
+  onFechaBlur() {
+    console.log('Blur en fecha, nuevo.fecha:', this.nuevo.fecha); // Depuración
+    console.log('Blur en fecha, movimientoSeleccionado.fecha:', this.movimientoSeleccionado.fecha); // Depuración
+    this.alCerrarFecha();
+  }
+
+  alCerrarFecha() {
+    console.log('Modal de fecha cerrado, nuevo.fecha:', this.nuevo.fecha); // Depuración
+    console.log('Modal de fecha cerrado, movimientoSeleccionado.fecha:', this.movimientoSeleccionado.fecha); // Depuración
+    this.mostrarSelector = false;
+    this.mostrarSelectorEditar = false;
+  }
+
+  formatDateForMySQL(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
   async actualizarMovimiento() {
+    if (!this.movimientoSeleccionado.fecha) {
+      const alerta = await this.alertController.create({
+        header: 'Fecha requerida',
+        message: 'Por favor selecciona una fecha.',
+        buttons: ['Aceptar']
+      });
+      await alerta.present();
+      return;
+    }
+
     const token = await this.storage.get('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
@@ -249,17 +314,24 @@ throw new Error('Method not implemented.');
       return;
     }
 
-    this.http.put(`http://localhost:3000/api/movimientos/${this.movimientoSeleccionado.id}`, this.movimientoSeleccionado, { headers })
+    // Formatear la fecha para el backend (YYYY-MM-DD HH:mm:ss)
+    const fechaFormateada = this.formatDateForMySQL(new Date(this.movimientoSeleccionado.fecha));
+    const movimientoParaEnviar = {
+      ...this.movimientoSeleccionado,
+      fecha: fechaFormateada
+    };
+
+    this.http.put(`http://localhost:3000/api/movimientos/${this.movimientoSeleccionado.id}`, movimientoParaEnviar, { headers })
       .subscribe({
         next: () => {
           const index = this.movimientos.findIndex(m => m.id === this.movimientoSeleccionado.id);
           if (index !== -1) {
-            this.movimientos[index] = { ...this.movimientoSeleccionado };
+            this.movimientos[index] = { ...movimientoParaEnviar };
           }
           this.cerrarModalEditar();
           this.actualizarGrafica();
         },
-        error: (err) => console.error('Error al actualizar movimiento', err),
+        error: (err) => console.error('Error al actualizar movimiento:', err),
       });
   }
 }

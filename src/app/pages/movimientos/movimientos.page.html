@@ -1,17 +1,39 @@
-<ion-menu contentId="main-content" type="overlay">
-  <ion-header>
-    <ion-toolbar color="primary">
-      <ion-title>Menú</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-menu #mainMenu contentId="main-content" type="overlay">
+<ion-toolbar color="primary">
+  <ion-buttons slot="start">
+    <ion-button (click)="mainMenu.close()">
+      <ion-icon name="menu-outline"></ion-icon>
+    </ion-button>
+  </ion-buttons>
+  <ion-title>Menú</ion-title>
+</ion-toolbar>
   <ion-content>
     <ion-list>
-      <ion-item routerLink="/movimientos" routerDirection="root">Movimientos</ion-item>
-      <ion-item routerLink="/deudas" routerDirection="root">Deudas</ion-item>
-      <ion-item routerLink="/reportes" routerDirection="root">Reportes</ion-item>
-      <ion-item routerLink="/ahorros-compartidos" routerDirection="root">ahorros-compartidos</ion-item>
-      <ion-item (click)="cerrarSesion()">Cerrar sesión</ion-item>
-    </ion-list>
+  <ion-item routerLink="/movimientos" routerDirection="root">
+    <ion-icon slot="start" name="swap-horizontal-outline"></ion-icon>
+    Movimientos
+  </ion-item>
+
+  <ion-item routerLink="/deudas" routerDirection="root">
+    <ion-icon slot="start" name="card-outline"></ion-icon>
+    Deudas
+  </ion-item>
+
+  <ion-item routerLink="/reportes" routerDirection="root">
+    <ion-icon slot="start" name="bar-chart-outline"></ion-icon>
+    Reportes
+  </ion-item>
+
+  <ion-item routerLink="/ahorros-compartidos" routerDirection="root">
+    <ion-icon slot="start" name="people-outline"></ion-icon>
+    Ahorros Compartidos
+  </ion-item>
+
+  <ion-item (click)="cerrarSesion()">
+    <ion-icon slot="start" name="log-out-outline"></ion-icon>
+    Cerrar sesión
+  </ion-item>
+</ion-list>
   </ion-content>
 </ion-menu>
 
@@ -20,7 +42,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Mis Finanzas</ion-title>
+    <ion-title>Mis Finanzas💰</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="cerrarSesion()">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
@@ -30,33 +52,25 @@
 </ion-header>
 
 <ion-content class="ion-padding" id="main-content">
-
-  <!-- Botones para cambiar tipo de gráfica -->
-  <ion-segment [(ngModel)]="tipoSeleccionado" (ionChange)="cambiarTipo(tipoSeleccionado)" class="ion-margin-bottom">
+  <ion-segment [(ngModel)]="tipoSeleccionado" (ionChange)="cambiarTipo(tipoSeleccionado)" class="segment-container">
     <ion-segment-button value="ingreso">
-      <ion-label>Ingresos</ion-label>
+      <ion-label>Ingresos📈</ion-label>
     </ion-segment-button>
     <ion-segment-button value="gasto">
-      <ion-label>Gastos</ion-label>
+      <ion-label>Gastos📉</ion-label>
     </ion-segment-button>
   </ion-segment>
 
-  <!-- Gráfica -->
-  <div style="display: block; width: 100%; max-width: 400px; margin: auto;">
-    <canvas 
-    baseChart
-    [data]="chartData"
-    [type]="'doughnut'">
-    </canvas>
+  <div class="grafica-container">
+    <canvas baseChart [data]="chartData" [type]="'doughnut'"></canvas>
   </div>
 
-  <!-- Formulario -->
-  <form (submit)="agregarMovimiento()">
+  <form (submit)="agregarMovimiento()" #form="ngForm" class="formulario-movimiento">
     <ion-item>
       <ion-label position="floating">Tipo</ion-label>
       <ion-select [(ngModel)]="nuevo.tipo" name="tipo" required>
-        <ion-select-option value="ingreso">Ingreso</ion-select-option>
-        <ion-select-option value="gasto">Gasto</ion-select-option>
+        <ion-select-option value="ingreso">Ingreso📈</ion-select-option>
+        <ion-select-option value="gasto">Gasto📉</ion-select-option>
       </ion-select>
     </ion-item>
 
@@ -70,10 +84,33 @@
       <ion-input type="text" [(ngModel)]="nuevo.descripcion" name="descripcion" required></ion-input>
     </ion-item>
 
-    <ion-button expand="full" type="submit" class="ion-margin-top">Agregar</ion-button>
+    <ion-item lines="none" button (click)="mostrarSelector = true">
+      <ion-label>Fecha</ion-label>
+      <ion-text slot="end" class="fecha-texto">{{ nuevo.fecha ? (nuevo.fecha | date:'M/d/yy, h:mm a') : 'dd/mm/aaaa' }}</ion-text>
+      <ion-icon name="calendar-outline" slot="end"></ion-icon>
+    </ion-item>
+
+    <ion-modal [isOpen]="mostrarSelector" (didDismiss)="mostrarSelector = false" cssClass="custom-date-modal-centered" backdropDismiss="true">
+      <ng-template>
+        <ion-content class="ion-padding">
+          <ion-datetime
+            presentation="date-time"
+            [(ngModel)]="nuevo.fecha"
+            name="fecha"
+            [max]="fechaMaxima"
+            (ionChange)="onFechaCambio($event)"
+            (ionBlur)="onFechaBlur()"
+            showDefaultButtons="true"
+            doneText="Seleccionar"
+            cancelText="Cancelar">
+          </ion-datetime>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+
+    <ion-button expand="full" type="submit" class="ion-margin-top" [disabled]="!form.valid">Agregar</ion-button>
   </form>
 
-  <!-- Lista de movimientos -->
   <ion-list>
     <ion-item *ngFor="let m of movimientos">
       <ion-label>
@@ -81,9 +118,69 @@
         <p>{{ m.tipo | titlecase }} - {{ m.cantidad | currency:'USD' }}</p>
         <p>{{ m.fecha | date:'short' }}</p>
       </ion-label>
+      <ion-button fill="clear" color="primary" slot="end" (click)="abrirModalEditar(m)">
+        <ion-icon name="pencil-outline"></ion-icon>
+      </ion-button>
       <ion-button fill="clear" color="danger" slot="end" (click)="eliminarMovimiento(m.id)">
         <ion-icon name="trash-outline"></ion-icon>
       </ion-button>
     </ion-item>
   </ion-list>
+
+  <ion-modal #modalEditar [isOpen]="mostrarModalEditar" (didDismiss)="cerrarModalEditar()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Editar Movimiento</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModalEditar()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <form (submit)="actualizarMovimiento()" class="formulario-movimiento">
+          <ion-item>
+            <ion-label position="floating">Tipo</ion-label>
+            <ion-select [(ngModel)]="movimientoSeleccionado.tipo" name="tipo" required>
+              <ion-select-option value="ingreso">Ingreso</ion-select-option>
+              <ion-select-option value="gasto">Gasto</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Cantidad</ion-label>
+            <ion-input type="number" [(ngModel)]="movimientoSeleccionado.cantidad" name="cantidad" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Descripción</ion-label>
+            <ion-input type="text" [(ngModel)]="movimientoSeleccionado.descripcion" name="descripcion" required></ion-input>
+          </ion-item>
+          <ion-item lines="none" button (click)="mostrarSelectorEditar = true">
+            <ion-label>Fecha</ion-label>
+            <ion-text slot="end" class="fecha-texto">{{ movimientoSeleccionado.fecha ? (movimientoSeleccionado.fecha | date:'M/d/yy, h:mm a') : 'dd/mm/aaaa' }}</ion-text>
+            <ion-icon name="calendar-outline" slot="end"></ion-icon>
+          </ion-item>
+
+          <ion-modal [isOpen]="mostrarSelectorEditar" (didDismiss)="mostrarSelectorEditar = false" cssClass="custom-date-modal-centered" backdropDismiss="true">
+            <ng-template>
+              <ion-content class="ion-padding">
+                <ion-datetime
+                  [(ngModel)]="movimientoSeleccionado.fecha"
+                  name="fecha"
+                  presentation="date-time"
+                  [max]="fechaMaxima"
+                  (ionChange)="onFechaCambio($event)"
+                  (ionBlur)="onFechaBlur()"
+                  showDefaultButtons="true"
+                  doneText="Seleccionar"
+                  cancelText="Cancelar">
+                </ion-datetime>
+              </ion-content>
+            </ng-template>
+          </ion-modal>
+
+          <ion-button expand="block" type="submit" class="ion-margin-top">Guardar Cambios</ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

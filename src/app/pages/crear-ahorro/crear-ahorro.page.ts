@@ -33,6 +33,10 @@ export class CrearAhorroPage {
   }
   }
 
+  cancelar() {
+  this.navCtrl.navigateBack('/ahorros-compartidos');
+}
+
   async cerrarSesion() {
     await this.storage.remove('token');
     this.router.navigate(['/login']);
