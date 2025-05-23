@@ -1,14 +1,9 @@
-/*canvas {
-  width: 100% !important;
-  max-width: 400px;
-  height: 300px !important;
-  color: white;
-}*/
-
+/* Configuración general de la página */
 ion-content {
   --background: #f1f4f9;
 }
 
+/* Título de la página */
 .page-title {
   text-align: center;
   font-size: 1.4rem;
@@ -17,110 +12,239 @@ ion-content {
   color: #1e1e1e;
 }
 
+/* Segmentos de Ingresos/Gastos */
 .segment-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
 }
 
+/* Contenedor de la gráfica - MEJORADO */
 .grafica-container {
   width: 100%;
-  max-width: 400px;
-  height: 300px; /* Altura fija para la gráfica */
-  margin: 0 auto 1rem;
+  max-width: 320px;
+  height: 250px;
+  margin: 0 auto 1.5rem;
   background: #fff;
   padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
+/* Canvas de la gráfica - CORREGIDO */
+.grafica-container canvas {
+  width: 100% !important;
+  max-width: 220px !important;
+  height: 220px !important;
+  object-fit: contain;
+}
+
+/* Tamaño específico para web/desktop */
+@media (min-width: 768px) {
+  .grafica-container {
+    max-width: 280px;
+    height: 220px;
+  }
+  
+  .grafica-container canvas {
+    max-width: 180px !important;
+    height: 180px !important;
+  }
+}
+
+/* Formulario de movimientos */
 .formulario-movimiento {
-  padding: 1rem;
+  padding: 1.5rem;
   background: #fff;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* Items del formulario */
 ion-item {
   --background: transparent;
-  border-radius: 10px;
-  margin-bottom: 0.5rem;
+  --border-radius: 12px;
+  margin-bottom: 0.8rem;
+  --padding-start: 16px;
+  --padding-end: 16px;
 }
 
+/* Botón de envío */
 ion-button[type="submit"] {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  --border-radius: 12px;
+  font-weight: 600;
 }
 
+/* Lista de movimientos */
 ion-list {
   margin-top: 1.5rem;
+  background: transparent;
 }
 
+ion-list ion-item {
+  --background: #fff;
+  margin-bottom: 0.8rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+/* Texto de fecha en el formulario - MEJORADO */
+.fecha-texto {
+  background: var(--ion-color-light);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ion-color-dark);
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* Modal general */
 ion-modal {
+  --width: 95%;
+  --height: auto;
+  --border-radius: 20px;
+  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal de fecha personalizado - CORREGIDO */
+.custom-date-modal-centered {
   --width: 90%;
+  --max-width: 400px;
   --height: auto;
   --border-radius: 20px;
 }
 
-.fecha-texto {
-  margin-left: auto;
-  background: var(--ion-color-light);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 15px;
-  color: var(--ion-color-dark);
-}
-
 .custom-date-modal-centered::part(backdrop) {
-  background: rgba(0, 0, 0, 0.3); // sombra visible
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
 }
 
-.custom-date-modal::part(content) {
-  --background: rgba(255, 255, 255, 0.95);
-  --box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.25);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(5px);
-  background: linear-gradient(to bottom, #f7e4bc, #ffffff); /* Gradiente base */
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(247, 228, 188, 0.8) 70%),
-                    repeating-linear-gradient(
-                      45deg,
-                      rgba(200, 200, 200, 0.1) 0,
-                      rgba(200, 200, 0.1) 1px,
-                      transparent 1px,
-                      transparent 6px
-                    );
-  background-blend-mode: overlay;
+.custom-date-modal-centered::part(content) {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  margin: 20px;
+  max-height: 80vh;
+  overflow: hidden;
 }
 
-.modal-wrapper {
-  background: var(--ion-color-light);
-  padding: 20px;
+/* Datetime picker dentro del modal */
+.custom-date-modal-centered ion-datetime {
+  --background: transparent;
+  --color: var(--ion-color-dark);
+  padding: 1rem;
+}
+
+/* Botones del datetime picker */
+.custom-date-modal-centered ion-datetime::part(button) {
+  --background: var(--ion-color-primary);
+  --color: white;
+  --border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Modal de edición */
+ion-modal#modalEditar {
+  --width: 95%;
+  --max-width: 500px;
+  --height: auto;
+  --border-radius: 20px;
+}
+
+/* Toolbar del modal de edición */
+ion-modal ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+ion-modal ion-title {
+  font-weight: 600;
+}
+
+/* Contenido del modal de edición */
+ion-modal ion-content {
+  --background: #f8f9fa;
+}
+
+/* Botones de acción en la lista */
+ion-button[fill="clear"] {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+/* Segmento de selección mejorado */
+ion-segment {
+  --background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  width: auto;
-  min-width: 300px;
-  max-width: 90vw;
-  margin: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.custom-date-modal-transparent::part(backdrop) {
-  background: rgba(0, 0, 0, 0.3);
+ion-segment-button {
+  --background: transparent;
+  --background-checked: var(--ion-color-primary);
+  --color-checked: white;
+  --border-radius: 8px;
+  font-weight: 500;
 }
 
-.custom-date-modal-transparent::part(content) {
-  background: transparent;
-  box-shadow: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Mejoras para dispositivos móviles */
+@media (max-width: 768px) {
+  .grafica-container {
+    margin: 0 1rem 1.5rem;
+    max-width: calc(100% - 2rem);
+  }
+  
+  .formulario-movimiento {
+    margin: 0 1rem 1.5rem;
+  }
+  
+  ion-list {
+    margin: 1.5rem 1rem 0;
+  }
+  
+  .fecha-texto {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
 }
 
+/* Animaciones suaves */
+ion-item,
+ion-button,
+.grafica-container,
+.formulario-movimiento {
+  transition: all 0.2s ease-in-out;
+}
+
+ion-item:hover,
+ion-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Estados de loading para la gráfica */
+.grafica-container.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

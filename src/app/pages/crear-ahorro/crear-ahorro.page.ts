@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { AhorrosCompartidosService } from '../../services/ahorros-compartidos.service';
 import { NavController } from '@ionic/angular';
-import { Storage } from '@ionic/storage-angular'; // Asegúrate de importar esto
+import { Storage } from '@ionic/storage-angular';
 import { Router } from '@angular/router';
 
 @Component({
@@ -23,26 +23,26 @@ export class CrearAhorroPage {
   ) {}
 
   async crearAhorro() {
-  try {
-    const response$ = await this.ahorrosService.crearAhorro(this.nombre, this.descripcion, this.meta);
-    response$.subscribe(() => {
-      this.navCtrl.navigateBack('/ahorros-compartidos');
-    });
-  } catch (error) {
-    console.error('Error al crear el ahorro:', error);
-  }
+    try {
+      const response$ = await this.ahorrosService.crearAhorro(this.nombre, this.descripcion, this.meta);
+      response$.subscribe(() => {
+        this.router.navigateByUrl('/ahorros-compartidos', { replaceUrl: true });
+      });
+    } catch (error) {
+      console.error('Error al crear el ahorro:', error);
+    }
   }
 
   cancelar() {
-  this.navCtrl.navigateBack('/ahorros-compartidos');
-}
+    this.router.navigateByUrl('/ahorros-compartidos', { replaceUrl: true });
+  }
 
   async cerrarSesion() {
     await this.storage.remove('token');
     this.router.navigate(['/login']);
   }
-  volver() {
-  window.history.back();
-}
 
+  volver() {
+    window.history.back();
+  }
 }

@@ -1,5 +1,51 @@
+<ion-menu #mainMenu contentId="main-content" type="overlay">
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-button (click)="mainMenu.close()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      <ion-title>Menú</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content>
+    <ion-list>
+      <ion-item routerLink="/movimientos" routerDirection="root">
+        <ion-icon slot="start" name="swap-horizontal-outline"></ion-icon>
+        <ion-label>Movimientos</ion-label>
+      </ion-item>
+
+      <ion-item routerLink="/deudas" routerDirection="root">
+        <ion-icon slot="start" name="card-outline"></ion-icon>
+        <ion-label>Deudas</ion-label>
+      </ion-item>
+
+      <ion-item routerLink="/reportes" routerDirection="root">
+        <ion-icon slot="start" name="bar-chart-outline"></ion-icon>
+        <ion-label>Reportes</ion-label>
+      </ion-item>
+
+      <ion-item routerLink="/ahorros-compartidos" routerDirection="root">
+        <ion-icon slot="start" name="people-outline"></ion-icon>
+        <ion-label>Ahorros Compartidos</ion-label>
+      </ion-item>
+
+      <ion-item (click)="cerrarSesion()">
+        <ion-icon slot="start" name="log-out-outline"></ion-icon>
+        <ion-label>Cerrar sesión</ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu>
+
+
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button autoHide="false"></ion-menu-button>
+    </ion-buttons>
     <ion-title>Ahorros Compartidos</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="cerrarSesion()">
@@ -8,6 +54,8 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
+
 
 <ion-content [fullscreen]="true">
   <!-- Lista de Ahorros -->
@@ -193,9 +241,9 @@
                   <ion-icon name="person-circle-outline" size="large"></ion-icon>
                 </ion-avatar>
                 <ion-label>
-                  <h3>{{ aporte.usuario_nombre || 'Usuario' }}</h3>
+                  <h3>{{ aporte.usuario?.nombre || aporte.usuario?.email || 'Usuario' }}</h3>
                   <p>Aportó: ${{ aporte.cantidad | number:'1.2-2' }}</p>
-                  <p>{{ aporte.fecha_aporte | date:'dd/MM/yyyy HH:mm' }}</p>
+                  <p>{{ aporte.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
                 </ion-label>
               </ion-item>
             </ion-list>
@@ -212,3 +260,13 @@
     </ng-template>
   </ion-modal>
 </ion-content>
+
+<!-- Pie de página -->
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="full" routerLink="/crear-ahorro" color="primary">
+      <ion-icon name="add" slot="start"></ion-icon>
+      Nuevo Ahorro
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>
